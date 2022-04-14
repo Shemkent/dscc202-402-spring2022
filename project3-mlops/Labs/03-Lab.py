@@ -127,6 +127,12 @@ from sklearn.model_selection import train_test_split
 @click.option("--min_impurity_decrease", default=0, type=float)
 def mlflow_rf(data_path, bootstrap, min_impurity_decrease):
  
+## specify experiment
+##  create and then set as one
+##  set_experiment --> [point to this experiment]
+
+mlflow.set_experiment('/Repos/jwu106@u.rochester.edu/dscc202-402-spring2022/project3-mlops/Labs/03-Lab')
+ 
   with mlflow.start_run() as run:
     # Import the data
     df = pd.read_csv(data_path)
@@ -169,6 +175,22 @@ dbutils.fs.ls(path)
 
 # MAGIC %md
 # MAGIC Execute your solution with the following code.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC 
+# MAGIC ## Student Note:  I have persistent issue with mlflow permission and was unable to execute the project. I talked to Prof. Palum several times and was unable to resolve this issue.  -- Jiahang
+
+# COMMAND ----------
+
+mlflow.set_experiment('/Repos/jwu106@u.rochester.edu/dscc202-402-spring2022/project3-mlops/Labs/03-Lab')
+#mlflow.set_experiment('4409869614219585')
+
+
+# COMMAND ----------
+
+!mlflow run /dbfs/user/jwu106@u.rochester.edu/mlflow/03_lab_psp/03-lab -b local -P bootstrap=False -P data_path=/dbfs/mnt/training/airbnb/sf-listings/airbnb-cleaned-mlflow.csv -P min_impurity_decrease=0.1
 
 # COMMAND ----------
 

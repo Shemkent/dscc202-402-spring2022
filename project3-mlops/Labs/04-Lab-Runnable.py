@@ -25,7 +25,7 @@ from sklearn.ensemble import GradientBoostingRegressor
  
 with mlflow.start_run() as run:
   # Import the data
-  df = pd.read_csv(artifact_URI)
+  df = pd.read_csv("/dbfs/mnt/training/airbnb/sf-listings/airbnb-cleaned-mlflow.csv")
   X_train, X_test, y_train, y_test = train_test_split(df.drop(["price"], axis=1), df[["price"]].values.ravel(), random_state=42)
     
   # Create model, train it, and create predictions
@@ -48,6 +48,7 @@ with mlflow.start_run() as run:
   mlflow.log_metric("r2", r2_score(y_test, predictions)) 
   
   #artifactURI = mlflow.get_artifact_uri()
+  run_id = run.info.run_id
   model_output_path = "runs:/" + run.info.run_id + "/" + model_path
  
 #Train and log the results from a model.  Try using Gradient Boosted Trees
@@ -63,7 +64,7 @@ dbutils.notebook.exit(json.dumps({
   "status": "OK",
   #"data_input_path": data_input_path,
   "run_id":run_id,
-  "path":path,
+#  "path":path,
   "model_output_path": model_output_path#.replace("dbfs:", "/dbfs")
 }))
  
