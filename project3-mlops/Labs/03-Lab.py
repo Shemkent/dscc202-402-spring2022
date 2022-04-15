@@ -192,6 +192,8 @@ mlflow.set_experiment('/Repos/jwu106@u.rochester.edu/dscc202-402-spring2022/proj
 
 !mlflow run /dbfs/user/jwu106@u.rochester.edu/mlflow/03_lab_psp/03-lab -b local -P bootstrap=False -P data_path=/dbfs/mnt/training/airbnb/sf-listings/airbnb-cleaned-mlflow.csv -P min_impurity_decrease=0.1
 
+#mlflow.exceptions.RestException: PERMISSION_DENIED: Missing required permissions [View] on node with ID '0'
+
 # COMMAND ----------
 
 import mlflow

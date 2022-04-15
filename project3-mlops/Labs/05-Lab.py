@@ -88,12 +88,6 @@ df.iloc[:10]
 
 # COMMAND ----------
 
-#X_train_processed = X_train.copy()
-X_train_processed
-
-
-# COMMAND ----------
-
 # TODO
 # new random forest model
 rf2 = RandomForestRegressor(n_estimators=100, max_depth=25)
@@ -135,6 +129,7 @@ rf2_mse
 # COMMAND ----------
 
 import mlflow.sklearn
+import mlflow
 
 with mlflow.start_run(run_name="RF Model Pre-process") as run: 
   mlflow.sklearn.log_model(rf2, "random-forest-model-preprocess")
@@ -151,16 +146,15 @@ with mlflow.start_run(run_name="RF Model Pre-process") as run:
 
 # COMMAND ----------
 
-# MAGIC %sh
-# MAGIC pip install --upgrade mlflow
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC 
 # MAGIC ### The code below has issues beyond the scope of this class. The mlflow instance called persists to say that the version is oudated when it cannot possibly be. 
+# MAGIC #### all the artifacts are logged, but mlflow refuses to access it.
+# MAGIC #### I updated mlflow in pip and the problem persists
 # MAGIC 
-# MAGIC ### I filled all codes as required, and they *should* function as expected. However, I am unable to test them as a result of this.
+# MAGIC ## 
+# MAGIC 
+# MAGIC ### I filled all codes as required regardless and they should run as expected.
 
 # COMMAND ----------
 
@@ -181,10 +175,7 @@ client = MlflowClient()
 rf2_run = sorted(client.list_run_infos(experimentID), key=lambda r: r.start_time, reverse=True)[0]
 rf2_path = rf2_run.artifact_uri+"/random-forest-model-preprocess/"
 
-#'dbfs:/databricks/mlflow-tracking/4409869614219127/7dcc13869c584e5899585417ad8ae729/artifacts/random-forest-model-preprocess/'
-#dbfs:/databricks/mlflow-tracking/4409869614219127/7dcc13869c584e5899585417ad8ae729/artifacts/random-forest-model-preprocess
-
-# mlflow version is too low to access the artifact, for some reason
+# mlflow version issue, impossible to resolve. I did everything I can, and mlflows insists the version is wrong
 
 rf2_pyfunc_model = mlflow.pyfunc.load_model('/dbfs/databricks/mlflow-tracking/4409869614219127/a6ecb40514334dcebb23f68c836eeab5/artifacts/random-forest-model-preprocess')
 #rf2_pyfunc_model = mlflow.pyfunc.load_pyfunc(rf2_path.replace("dbfs:", "/dbfs"))
