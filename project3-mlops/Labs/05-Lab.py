@@ -88,23 +88,37 @@ df.iloc[:10]
 
 # COMMAND ----------
 
+#X_train_processed = X_train.copy()
+X_train_processed
+
+
+# COMMAND ----------
+
 # TODO
 # new random forest model
 rf2 = RandomForestRegressor(n_estimators=100, max_depth=25)
 
 # pre-process train data
 X_train_processed = X_train.copy()
-X_train_processed["trunc_lat"] = #FILL_IN
-X_train_processed["trunc_long"] = #FILL_IN
-X_train_processed["review_scores_sum"] = #FILL_IN
-X_train_processed = X_train_processed.drop(FILL_IN, axis=1)
+X_train_processed["trunc_lat"] = X_train_processed["latitude"].apply(lambda x: round(x,2))
+X_train_processed["trunc_long"] = X_train_processed["longitude"].apply(lambda x: round(x,2))
+col_names = ['review_scores_accuracy', 'review_scores_cleanliness', 'review_scores_checkin', 'review_scores_communication', 'review_scores_location', 'review_scores_value']
+X_train_processed["review_scores_sum"] = X_train_processed[col_names].sum(axis=1)
+col_names.append('latitude')
+col_names.append('longitude')
+X_train_processed = X_train_processed.drop(columns=col_names) #, axis=1)
 
 # pre-process test data to obtain MSE
 X_test_processed = X_test.copy()
-X_test_processed["trunc_lat"] = #FILL_IN
-X_test_processed["trunc_long"] = #FILL_IN
-X_test_processed["review_scores_sum"] = #FILL_IN
-X_test_processed = X_test_processed.drop(FILL_IN, axis=1)
+X_test_processed["trunc_lat"] = X_test_processed["latitude"].apply(lambda x: round(x,2))
+X_test_processed["trunc_long"] = X_test_processed["longitude"].apply(lambda x: round(x,2))
+col_names = ['review_scores_accuracy', 'review_scores_cleanliness', 'review_scores_checkin', 'review_scores_communication', 'review_scores_location', 'review_scores_value']
+
+X_test_processed["review_scores_sum"] = X_test_processed[col_names].sum(axis=1)
+col_names.append('latitude')
+col_names.append('longitude')
+X_test_processed = X_test_processed.drop(columns=col_names) #, axis=1)
+
 
 
 # fit and evaluate new rf model
@@ -128,11 +142,35 @@ with mlflow.start_run(run_name="RF Model Pre-process") as run:
   
   experimentID = run.info.experiment_id
   artifactURI = mlflow.get_artifact_uri()
+  print(artifactURI)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC Now let's load the `python_function` flavor of the model so we can apply it to a test set.
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC pip install --upgrade mlflow
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC 
+# MAGIC ### The code below has issues beyond the scope of this class. The mlflow instance called persists to say that the version is oudated when it cannot possibly be. 
+# MAGIC 
+# MAGIC ### I filled all codes as required, and they *should* function as expected. However, I am unable to test them as a result of this.
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC pip install --upgrade mlflow
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC ls 'dbfs:/databricks/mlflow-tracking/4409869614219127/336aa53e82c844e3a1a3551aca606f05/artifacts'
 
 # COMMAND ----------
 
@@ -143,7 +181,13 @@ client = MlflowClient()
 rf2_run = sorted(client.list_run_infos(experimentID), key=lambda r: r.start_time, reverse=True)[0]
 rf2_path = rf2_run.artifact_uri+"/random-forest-model-preprocess/"
 
-rf2_pyfunc_model = mlflow.pyfunc.load_pyfunc(rf2_path.replace("dbfs:", "/dbfs"))
+#'dbfs:/databricks/mlflow-tracking/4409869614219127/7dcc13869c584e5899585417ad8ae729/artifacts/random-forest-model-preprocess/'
+#dbfs:/databricks/mlflow-tracking/4409869614219127/7dcc13869c584e5899585417ad8ae729/artifacts/random-forest-model-preprocess
+
+# mlflow version is too low to access the artifact, for some reason
+
+rf2_pyfunc_model = mlflow.pyfunc.load_model('/dbfs/databricks/mlflow-tracking/4409869614219127/a6ecb40514334dcebb23f68c836eeab5/artifacts/random-forest-model-preprocess')
+#rf2_pyfunc_model = mlflow.pyfunc.load_pyfunc(rf2_path.replace("dbfs:", "/dbfs"))
 
 # COMMAND ----------
 
@@ -185,9 +229,16 @@ class RF_with_preprocess(mlflow.pyfunc.PythonModel):
         self.rf = trained_rf
 
     def preprocess_input(self, model_input):
-        '''return pre-processed model_input'''
-        # FILL_IN
-        return
+        #'''return pre-processed model_input'''
+        X_train_processed = model_input.copy()
+        X_train_processed["trunc_lat"] = X_train_processed["latitude"].apply(lambda x: round(x,2))
+        X_train_processed["trunc_long"] = X_train_processed["longitude"].apply(lambda x: round(x,2))
+        col_names = ['review_scores_accuracy', 'review_scores_cleanliness', 'review_scores_checkin', 'review_scores_communication', 'review_scores_location', 'review_scores_value']
+        X_train_processed["review_scores_sum"] = X_train_processed[col_names].sum(axis=1)
+        col_names.append('latitude')
+        col_names.append('longitude')
+        X_train_processed = X_train_processed.drop(columns=col_names) #, axis=1)
+        return X_train_processed
     
     def predict(self, context, model_input):
         processed_model_input = self.preprocess_input(model_input.copy())
@@ -239,16 +290,27 @@ class RF_with_postprocess(mlflow.pyfunc.PythonModel):
         self.rf = trained_rf
 
     def preprocess_input(self, model_input):
-        '''return pre-processed model_input'''
-        # FILL_IN
-        return 
+        #'''return pre-processed model_input'''
+        X_train_processed = model_input.copy()
+        X_train_processed["trunc_lat"] = X_train_processed["latitude"].apply(lambda x: round(x,2))
+        X_train_processed["trunc_long"] = X_train_processed["longitude"].apply(lambda x: round(x,2))
+        col_names = ['review_scores_accuracy', 'review_scores_cleanliness', 'review_scores_checkin', 'review_scores_communication', 'review_scores_location', 'review_scores_value']
+        X_train_processed["review_scores_sum"] = X_train_processed[col_names].sum(axis=1)
+        col_names.append('latitude')
+        col_names.append('longitude')
+        X_train_processed = X_train_processed.drop(columns=col_names) #, axis=1)
+        return X_train_processed
       
     def postprocess_result(self, results):
-        '''return post-processed results
-        Expensive: predicted price > 100
-        Not Expensive: predicted price <= 100'''
-        # FILL_IN
-        return 
+        #'''return post-processed results
+        #Expensive: predicted price > 100
+        #Not Expensive: predicted price <= 100'''
+        processed_results = []
+        for y in results:
+            if y > 100: processed_results.append('Expensive') 
+            else:  processed_results.append('Not Expensive') 
+        
+        return processed_results
     
     def predict(self, context, model_input):
         processed_model_input = self.preprocess_input(model_input.copy())
